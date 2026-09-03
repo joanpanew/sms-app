@@ -43,7 +43,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="top"
-                android:inputType="textmultiLine|textCapSentences"
+                android:inputType="textMultiLine|textCapSentences"
                 android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
