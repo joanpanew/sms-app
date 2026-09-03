@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
-        b.btnStart.setOnClickListener { onStart() }
+        b.btnStart.setOnClickListener { iniciarEnvio() }
         b.btnPause.setOnClickListener {
             val p = SenderBus.progress.value
             val action = if (p.paused) SmsSenderService.ACTION_RESUME else SmsSenderService.ACTION_PAUSE
@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         if (pos in sims.indices) settings.simSubId = sims[pos].subId
     }
 
-    private fun onStart() {
+    private fun iniciarEnvio() {
         val missing = missingPermissions().filter {
             it == Manifest.permission.SEND_SMS || it == Manifest.permission.READ_CONTACTS ||
                 it == Manifest.permission.RECEIVE_SMS
