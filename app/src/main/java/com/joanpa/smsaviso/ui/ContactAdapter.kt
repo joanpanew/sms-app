@@ -43,7 +43,13 @@ class ContactAdapter(
 
     fun selectedRows(): List<ContactRow> = all.filter { selectedKeys.contains(key(it)) }
 
-    private fun key(row: ContactRow) = row.name + "|" + row.phone
+    /**
+     * Clave estable: no depende del formato mostrado del número, solo del nombre
+     * y los últimos 10 dígitos. Así la selección se conserva aunque cambie el
+     * filtro (que reformatea los números).
+     */
+    private fun key(row: ContactRow): String =
+        row.name + "|" + row.phone.filter { it.isDigit() }.takeLast(10)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val b = ItemContactBinding.inflate(LayoutInflater.from(parent.context), parent, false)

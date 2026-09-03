@@ -97,10 +97,14 @@ class ContactsActivity : AppCompatActivity() {
                 val rawNum = c.getString(iNum)?.trim().orEmpty()
                 if (rawNum.isEmpty()) continue
 
-                val phone = if (onlyColombia) {
-                    ColombiaPhone.normalizeMobile(rawNum) ?: continue
-                } else {
-                    rawNum.cleanPhone()
+                // Los celulares colombianos se normalizan SIEMPRE a +573XXXXXXXXX,
+                // esté el filtro activo o no. Con el filtro activo, lo que no sea
+                // celular colombiano se descarta.
+                val coMobile = ColombiaPhone.normalizeMobile(rawNum)
+                val phone = when {
+                    coMobile != null -> coMobile
+                    onlyColombia -> continue
+                    else -> rawNum.cleanPhone()
                 }
 
                 val dedupe = name + "|" + phone.phoneKey()
