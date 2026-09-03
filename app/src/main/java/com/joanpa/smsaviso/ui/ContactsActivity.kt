@@ -12,8 +12,10 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.joanpa.smsaviso.data.AppDatabase
+import com.joanpa.smsaviso.data.GroupMember
 import com.joanpa.smsaviso.data.Recipient
 import com.joanpa.smsaviso.databinding.ActivityContactsBinding
+import com.joanpa.smsaviso.util.ColombiaPhone
 import com.joanpa.smsaviso.util.cleanPhone
 import com.joanpa.smsaviso.util.phoneKey
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +26,9 @@ class ContactsActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityContactsBinding
     private lateinit var adapter: ContactAdapter
+
+    private val groupId: Long by lazy { intent.getLongExtra(EXTRA_GROUP_ID, -1L) }
+    private val toGroup: Boolean get() = groupId > 0
 
     private val askPerm = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) loadContacts() else {
@@ -37,13 +42,17 @@ class ContactsActivity : AppCompatActivity() {
         b = ActivityContactsBinding.inflate(layoutInflater)
         setContentView(b.root)
 
+        title = if (toGroup) "Agregar contactos al grupo" else "Elegir contactos"
+        b.btnAdd.text = if (toGroup) "Agregar al grupo" else "Agregar a la cola"
+
         adapter = ContactAdapter { updateCount() }
         b.rvContacts.layoutManager = LinearLayoutManager(this)
         b.rvContacts.adapter = adapter
 
         b.etSearch.doAfterTextChanged { adapter.filter(it?.toString().orEmpty()) }
         b.cbSelectAll.setOnCheckedChangeListener { _, checked -> adapter.selectAllVisible(checked) }
-        b.btnAdd.setOnClickListener { addToQueue() }
+        b.cbOnlyColombia.setOnCheckedChangeListener { _, _ -> loadContacts() }
+        b.btnAdd.setOnClickListener { addSelected() }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
             == PackageManager.PERMISSION_GRANTED
@@ -55,17 +64,21 @@ class ContactsActivity : AppCompatActivity() {
     }
 
     private fun loadContacts() {
+        val onlyColombia = b.cbOnlyColombia.isChecked
         lifecycleScope.launch {
-            val rows = withContext(Dispatchers.IO) { queryContacts() }
+            val rows = withContext(Dispatchers.IO) { queryContacts(onlyColombia) }
             adapter.submit(rows)
             updateCount()
             if (rows.isEmpty()) {
-                Toast.makeText(this@ContactsActivity, "No se encontraron contactos con número", Toast.LENGTH_LONG).show()
+                val msg = if (onlyColombia)
+                    "Ningún contacto con celular de Colombia válido"
+                else "No se encontraron contactos con número"
+                Toast.makeText(this@ContactsActivity, msg, Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    private fun queryContacts(): List<ContactRow> {
+    private fun queryContacts(onlyColombia: Boolean): List<ContactRow> {
         val seen = HashSet<String>()
         val out = ArrayList<ContactRow>()
         val projection = arrayOf(
@@ -83,7 +96,13 @@ class ContactsActivity : AppCompatActivity() {
                 val name = c.getString(iName)?.trim().orEmpty().ifBlank { "(sin nombre)" }
                 val rawNum = c.getString(iNum)?.trim().orEmpty()
                 if (rawNum.isEmpty()) continue
-                val phone = rawNum.cleanPhone()
+
+                val phone = if (onlyColombia) {
+                    ColombiaPhone.normalizeMobile(rawNum) ?: continue
+                } else {
+                    rawNum.cleanPhone()
+                }
+
                 val dedupe = name + "|" + phone.phoneKey()
                 if (seen.add(dedupe)) out.add(ContactRow(name, phone))
             }
@@ -91,7 +110,7 @@ class ContactsActivity : AppCompatActivity() {
         return out
     }
 
-    private fun addToQueue() {
+    private fun addSelected() {
         val chosen = adapter.selectedRows()
         if (chosen.isEmpty()) {
             Toast.makeText(this, "Marca al menos un contacto", Toast.LENGTH_SHORT).show()
@@ -99,20 +118,36 @@ class ContactsActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             val added = withContext(Dispatchers.IO) {
-                val dao = AppDatabase.get(this@ContactsActivity).recipientDao()
-                val current = dao.allPhones().map { it.phoneKey() }.toMutableSet()
-                val toInsert = chosen
-                    .filter { current.add(it.phone.phoneKey()) }
-                    .map { Recipient(name = it.name, phone = it.phone) }
-                dao.insertAll(toInsert)
-                toInsert.size
+                val db = AppDatabase.get(this@ContactsActivity)
+                if (toGroup) {
+                    val dao = db.groupDao()
+                    val current = dao.memberPhones(groupId).map { it.phoneKey() }.toMutableSet()
+                    val toInsert = chosen
+                        .filter { current.add(it.phone.phoneKey()) }
+                        .map { GroupMember(groupId = groupId, name = it.name, phone = it.phone) }
+                    dao.insertMembers(toInsert)
+                    toInsert.size
+                } else {
+                    val dao = db.recipientDao()
+                    val current = dao.allPhones().map { it.phoneKey() }.toMutableSet()
+                    val toInsert = chosen
+                        .filter { current.add(it.phone.phoneKey()) }
+                        .map { Recipient(name = it.name, phone = it.phone) }
+                    dao.insertAll(toInsert)
+                    toInsert.size
+                }
             }
+            val where = if (toGroup) "al grupo" else "a la cola"
             Toast.makeText(
                 this@ContactsActivity,
-                "Agregados $added (duplicados omitidos)",
+                "Agregados $added $where (duplicados omitidos)",
                 Toast.LENGTH_LONG
             ).show()
             finish()
         }
+    }
+
+    companion object {
+        const val EXTRA_GROUP_ID = "group_id"
     }
 }

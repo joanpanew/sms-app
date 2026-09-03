@@ -6,8 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Recipient::class, SendLog::class, OptOut::class],
-    version = 1,
+    entities = [
+        Recipient::class,
+        SendLog::class,
+        OptOut::class,
+        SmsGroup::class,
+        GroupMember::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -15,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recipientDao(): RecipientDao
     abstract fun sendLogDao(): SendLogDao
     abstract fun optOutDao(): OptOutDao
+    abstract fun groupDao(): GroupDao
 
     companion object {
         @Volatile

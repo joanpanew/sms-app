@@ -142,6 +142,8 @@ class MainActivity : AppCompatActivity() {
             else askPermissions.launch(arrayOf(Manifest.permission.READ_CONTACTS))
         }
 
+        b.btnGroups.setOnClickListener { startActivity(Intent(this, GroupsActivity::class.java)) }
+
         b.btnHistory.setOnClickListener { startActivity(Intent(this, HistoryActivity::class.java)) }
 
         b.btnClearQueue.setOnClickListener {

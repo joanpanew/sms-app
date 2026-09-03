@@ -42,6 +42,11 @@
             android:exported="false"
             android:label="@string/title_historial" />
 
+        <activity
+            android:name=".ui.GroupsActivity"
+            android:exported="false"
+            android:label="Grupos" />
+
         <service
             android:name=".sms.SmsSenderService"
             android:exported="false"

@@ -2,10 +2,10 @@ package com.joanpa.smsaviso.util
 
 import android.telephony.SmsManager
 
-/** Deja solo dígitos y toma los últimos 9 como clave de comparación. */
+/** Deja solo dígitos y toma los últimos 10 como clave de comparación (celular CO = 10 dígitos). */
 fun String.phoneKey(): String {
     val digits = filter { it.isDigit() }
-    return if (digits.length <= 9) digits else digits.takeLast(9)
+    return if (digits.length <= 10) digits else digits.takeLast(10)
 }
 
 /** Normaliza para enviar: deja + inicial y dígitos. */
