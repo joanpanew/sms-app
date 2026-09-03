@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SMS Aviso Controlado</string>
+    <string name="title_contactos">Elegir contactos</string>
+    <string name="title_historial">Historial de envíos</string>
+
+    <string name="consent_title">Uso responsable</string>
+    <string name="consent_body">Esta aplicación envía SMS uno por uno, con pausas, únicamente a los contactos que tú selecciones.\n\nAl continuar confirmas que:\n\n• Enviarás avisos solo a personas que te dieron su número y esperan tu comunicación.\n• No usarás la app para publicidad masiva no solicitada (spam).\n• Respetarás las solicitudes de baja: si alguien responde STOP, BAJA o CANCELAR, la app lo excluirá automáticamente de futuros envíos.\n• Cada SMS lo cobra tu operadora según tu plan.\n\nEl envío controlado reduce el riesgo de bloqueo, pero no lo garantiza. Eres responsable del contenido y del cumplimiento de la ley de protección de datos y de las normas de tu operadora.</string>
+    <string name="consent_accept">Acepto y continúo</string>
+    <string name="consent_decline">Salir</string>
+
+    <string name="disclaimer_short">Envía solo a contactos que esperan tu aviso. Las respuestas STOP/BAJA se excluyen solas.</string>
+
+    <string name="perm_needed">Se necesitan los permisos de SMS, Contactos, Teléfono y Notificaciones para funcionar.</string>
+</resources>

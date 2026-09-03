@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#1565C0</color>
+    <color name="brand_primary_dark">#0D47A1</color>
+    <color name="brand_secondary">#00897B</color>
+    <color name="ic_launcher_bg">#0D47A1</color>
+    <color name="ok_green">#2E7D32</color>
+    <color name="fail_red">#C62828</color>
+    <color name="warn_amber">#EF6C00</color>
+</resources>
