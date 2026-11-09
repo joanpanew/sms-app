@@ -15,8 +15,24 @@ android {
         versionName = "1.0"
     }
 
+    // Clave fija en el repo: así cada APK nueva se instala ENCIMA de la anterior
+    // (con la clave debug aleatoria de GitHub Actions Android decía "conflicto con un paquete").
+    // Solo sirve para uso propio; no es una clave de publicación.
+    signingConfigs {
+        create("fija") {
+            storeFile = file("estado-debug.keystore")
+            storePassword = "android"
+            keyAlias = "estado"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("fija")
+        }
         getByName("release") {
+            signingConfig = signingConfigs.getByName("fija")
             isMinifyEnabled = false
         }
     }
