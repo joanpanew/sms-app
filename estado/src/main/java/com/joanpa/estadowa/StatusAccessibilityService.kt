@@ -143,6 +143,7 @@ class StatusAccessibilityService : AccessibilityService() {
     private fun finishJob(ok: Boolean, detail: String) {
         val id = armedJob
         disarm()
+        AppPrefs.unlock(this)
         handler.removeCallbacks(ticker)
         ticking = false
         if (id < 0) return

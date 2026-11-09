@@ -47,11 +47,19 @@ class PublishActivity : Activity() {
     }
 
     private fun start(intent: Intent) {
-        if (launched) return
-        jobId = intent.getLongExtra(Scheduler.EXTRA_JOB_ID, -1)
+        val requested = intent.getLongExtra(Scheduler.EXTRA_JOB_ID, -1)
+        if (launched) {
+            // Llegó otro estado mientras publicamos este: lo dejamos para dentro de 2 minutos.
+            if (requested != jobId) postpone(requested)
+            return
+        }
+        jobId = requested
         val job = JobStore.get(this, jobId)
         if (job == null || job.state != StatusJob.PENDING) {
             finish(); return
+        }
+        if (!AppPrefs.tryLock(this, jobId)) { // otra publicación en curso
+            postpone(jobId); finish(); return
         }
         launched = true
         NotificationManagerCompat.from(this).cancel(AlarmReceiver.NOTIF_ALARM + jobId.toInt())
@@ -109,8 +117,17 @@ class PublishActivity : Activity() {
         }, 1200)
     }
 
+    private fun postpone(id: Long) {
+        val other = JobStore.get(this, id) ?: return
+        if (other.state != StatusJob.PENDING) return
+        val later = other.copy(timeMillis = System.currentTimeMillis() + 2 * 60_000)
+        JobStore.save(this, later)
+        Scheduler.schedule(this, later)
+    }
+
     private fun fail(job: StatusJob, msg: String) {
         if (JobStore.get(this, job.id)?.state != StatusJob.RUNNING) return
+        AppPrefs.unlock(this)
         JobStore.update(this, job.id, StatusJob.FAILED, msg)
         App.notify(this, job.id.toInt(), "No se publicó el estado", msg)
         finish()

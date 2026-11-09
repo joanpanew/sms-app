@@ -98,6 +98,25 @@ object AppPrefs {
     fun pkg(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getString("pkg", "com.whatsapp")!!
     fun setPkg(ctx: Context, v: String) = ctx.getSharedPreferences(PREFS, 0).edit().putString("pkg", v).apply()
 
+    /**
+     * "Candado" de publicación: mientras una publicación está en curso, las demás alarmas esperan.
+     * Se guarda con commit() (síncrono) porque varias alarmas pueden dispararse en el mismo instante.
+     */
+    @Synchronized
+    fun tryLock(ctx: Context, jobId: Long): Boolean {
+        val sp = ctx.getSharedPreferences(PREFS, 0)
+        val now = System.currentTimeMillis()
+        val owner = sp.getLong("lockJob", -1L)
+        if (owner != jobId && sp.getLong("lockUntil", 0L) > now) return false
+        sp.edit().putLong("lockJob", jobId).putLong("lockUntil", now + 3 * 60_000).commit()
+        return true
+    }
+
+    @Synchronized
+    fun unlock(ctx: Context) {
+        ctx.getSharedPreferences(PREFS, 0).edit().remove("lockJob").remove("lockUntil").commit()
+    }
+
     // --- Reenvío desde Telegram ---
     fun forwardEnabled(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getBoolean("fwd", false)
     fun setForwardEnabled(ctx: Context, v: Boolean) = ctx.getSharedPreferences(PREFS, 0).edit().putBoolean("fwd", v).apply()

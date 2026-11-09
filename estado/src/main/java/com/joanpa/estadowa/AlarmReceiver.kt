@@ -19,13 +19,9 @@ class AlarmReceiver : BroadcastReceiver() {
         val job = JobStore.get(ctx, id) ?: return
         if (job.state != StatusJob.PENDING) return
 
-        // Si otra publicación está en curso (p. ej. un video y una noticia a la vez), esperar 2 min.
-        val now = System.currentTimeMillis()
-        val busy = JobStore.all(ctx).any {
-            it.id != id && it.state == StatusJob.RUNNING && now - it.timeMillis < 5 * 60_000
-        }
-        if (busy) {
-            val later = job.copy(timeMillis = now + 2 * 60_000)
+        // Si otra publicación está en curso (p. ej. varios estados a la misma hora), esperar 2 min.
+        if (!AppPrefs.tryLock(ctx, id)) {
+            val later = job.copy(timeMillis = System.currentTimeMillis() + 2 * 60_000)
             JobStore.save(ctx, later)
             Scheduler.schedule(ctx, later)
             return
