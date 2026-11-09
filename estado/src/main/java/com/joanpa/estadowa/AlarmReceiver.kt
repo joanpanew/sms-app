@@ -19,6 +19,18 @@ class AlarmReceiver : BroadcastReceiver() {
         val job = JobStore.get(ctx, id) ?: return
         if (job.state != StatusJob.PENDING) return
 
+        // Si otra publicación está en curso (p. ej. un video y una noticia a la vez), esperar 2 min.
+        val now = System.currentTimeMillis()
+        val busy = JobStore.all(ctx).any {
+            it.id != id && it.state == StatusJob.RUNNING && now - it.timeMillis < 5 * 60_000
+        }
+        if (busy) {
+            val later = job.copy(timeMillis = now + 2 * 60_000)
+            JobStore.save(ctx, later)
+            Scheduler.schedule(ctx, later)
+            return
+        }
+
         val activity = PublishActivity.intent(ctx, id)
         val fullScreen = PendingIntent.getActivity(
             ctx, id.toInt(), activity,

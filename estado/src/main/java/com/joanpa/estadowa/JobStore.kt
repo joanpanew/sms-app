@@ -22,7 +22,10 @@ data class StatusJob(
         const val RUNNING = "PUBLICANDO"
         const val DONE = "PUBLICADO"
         const val FAILED = "FALLÓ"
+        const val TEXT_MIME = "text/plain"
     }
+
+    val isText get() = mimeType == TEXT_MIME
 }
 
 /** Guarda los estados programados en SharedPreferences (JSON). */
@@ -54,8 +57,12 @@ object JobStore {
 
     @Synchronized
     fun save(ctx: Context, job: StatusJob) {
-        val list = all(ctx).filter { it.id != job.id } + job
-        write(ctx, list)
+        // Limpieza: borra del historial lo terminado hace más de 7 días.
+        val old = System.currentTimeMillis() - 7 * 24 * 3600_000L
+        val (expired, keep) = all(ctx).filter { it.id != job.id }
+            .partition { (it.state == StatusJob.DONE || it.state == StatusJob.FAILED) && it.timeMillis < old }
+        expired.forEach { if (it.filePath.isNotEmpty()) File(it.filePath).delete() }
+        write(ctx, keep + job)
     }
 
     @Synchronized
@@ -67,7 +74,7 @@ object JobStore {
     @Synchronized
     fun delete(ctx: Context, id: Long) {
         val job = get(ctx, id) ?: return
-        File(job.filePath).delete()
+        if (job.filePath.isNotEmpty()) File(job.filePath).delete()
         write(ctx, all(ctx).filter { it.id != id })
     }
 
@@ -90,4 +97,18 @@ object AppPrefs {
     fun setLockAfter(ctx: Context, v: Boolean) = ctx.getSharedPreferences(PREFS, 0).edit().putBoolean("lock", v).apply()
     fun pkg(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getString("pkg", "com.whatsapp")!!
     fun setPkg(ctx: Context, v: String) = ctx.getSharedPreferences(PREFS, 0).edit().putString("pkg", v).apply()
+
+    // --- Reenvío desde Telegram ---
+    fun forwardEnabled(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getBoolean("fwd", false)
+    fun setForwardEnabled(ctx: Context, v: Boolean) = ctx.getSharedPreferences(PREFS, 0).edit().putBoolean("fwd", v).apply()
+    fun source(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getString("source", "joanpa noticias")!!
+    fun setSource(ctx: Context, v: String) = ctx.getSharedPreferences(PREFS, 0).edit().putString("source", v).apply()
+    fun intervalMin(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getInt("interval", 10)
+    fun setIntervalMin(ctx: Context, v: Int) = ctx.getSharedPreferences(PREFS, 0).edit().putInt("interval", v).apply()
+    fun lastSlot(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getLong("lastSlot", 0L)
+    fun setLastSlot(ctx: Context, v: Long) = ctx.getSharedPreferences(PREFS, 0).edit().putLong("lastSlot", v).apply()
+    fun recentHashes(ctx: Context): List<String> =
+        ctx.getSharedPreferences(PREFS, 0).getString("recent", "")!!.split(',').filter { it.isNotEmpty() }
+    fun setRecentHashes(ctx: Context, v: List<String>) =
+        ctx.getSharedPreferences(PREFS, 0).edit().putString("recent", v.joinToString(",")).apply()
 }

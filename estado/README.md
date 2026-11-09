@@ -36,6 +36,23 @@ La app muestra todo esto en la sección *"1. Preparar el teléfono"* con botones
 
 Puedes programar varios estados; la lista muestra si cada uno quedó PUBLICADO o FALLÓ y por qué.
 
+## Reenviar noticias de Telegram a tu estado
+
+La sección **"3. Reenviar noticias de Telegram a mi estado"** lee las notificaciones de Telegram
+y, cuando llega un mensaje del canal configurado (por defecto **joanpa noticias**), lo publica
+como **estado de texto** en WhatsApp.
+
+- Se publican **en orden** y con una pausa mínima entre una y otra (por defecto **10 minutos**)
+  para no arriesgar un bloqueo de WhatsApp.
+- Solo se reenvía el **texto** de la notificación (máx. ~700 caracteres). Las fotos y videos de
+  Telegram no vienen en la notificación, así que no se reenvían.
+- Necesita el permiso **Acceso a notificaciones** (botón *Arreglar*). Si Android dice
+  "A la app se le negó el acceso", primero: *Ajustes → Apps → Estado Programado → ⋮ →
+  Permitir configuración restringida*.
+- Las notificaciones de ese canal **no deben estar silenciadas** en Telegram, o no llegarán.
+- Igual que con los videos: el teléfono debe poder desbloquearse solo (sin PIN) cuando toque
+  publicar, y la publicación toma la pantalla unos segundos.
+
 ## Obtener la APK
 
 Cada push al repositorio compila en GitHub Actions. En **Actions → Build APK → (última ejecución)

@@ -144,13 +144,66 @@
                 android:layout_height="wrap_content"
                 android:text="Probar: publicar en 20 segundos" />
 
-            <!-- ===== 3. Lista ===== -->
+            <!-- ===== 3. Telegram -> estado ===== -->
             <TextView
                 style="@style/TextAppearance.Material3.TitleMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="3. Estados programados" />
+                android:text="3. Reenviar noticias de Telegram a mi estado" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Cada mensaje que llegue por notificación desde ese canal de Telegram se publica como estado de texto en WhatsApp, en orden y con una pausa mínima entre uno y otro." />
+
+            <LinearLayout
+                android:id="@+id/fwdChecks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/swForward"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reenvío automático activado" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:hint="Nombre del canal en Telegram">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSource"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:hint="Minutos mínimos entre publicaciones">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etInterval"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ===== 4. Lista ===== -->
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="4. Estados programados" />
 
             <TextView
                 android:id="@+id/tvEmpty"

@@ -61,7 +61,7 @@ class PublishActivity : Activity() {
             fail(job, "El servicio de accesibilidad está desactivado. Actívalo en la app.")
             return
         }
-        if (!File(job.filePath).exists()) {
+        if (!job.isText && !File(job.filePath).exists()) {
             fail(job, "No se encontró el archivo del video.")
             return
         }
@@ -85,14 +85,17 @@ class PublishActivity : Activity() {
     private fun launchWhatsApp(job: StatusJob) {
         // Pequeña espera para que la pantalla termine de encenderse.
         handler.postDelayed({
-            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", File(job.filePath))
             val share = Intent(Intent.ACTION_SEND).apply {
                 type = job.mimeType
                 setPackage(job.pkg)
-                putExtra(Intent.EXTRA_STREAM, uri)
                 if (job.caption.isNotBlank()) putExtra(Intent.EXTRA_TEXT, job.caption)
-                clipData = ClipData.newRawUri("", uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (!job.isText) {
+                    val uri = FileProvider.getUriForFile(this@PublishActivity, "$packageName.fileprovider", File(job.filePath))
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    clipData = ClipData.newRawUri("", uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             try {
                 StatusAccessibilityService.arm(job.id, job.pkg)

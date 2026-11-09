@@ -16,11 +16,13 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import com.joanpa.estadowa.databinding.ActivityMainBinding
 import com.joanpa.estadowa.databinding.ItemCheckBinding
 import com.joanpa.estadowa.databinding.ItemJobBinding
@@ -70,6 +72,8 @@ class MainActivity : AppCompatActivity() {
                 updateWhen()
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
+        setupForward()
+
         b.btnSchedule.setOnClickListener { createJob(cal.timeInMillis) }
         b.btnTest.setOnClickListener { createJob(System.currentTimeMillis() + 20_000) }
         updateWhen()
@@ -128,6 +132,63 @@ class MainActivity : AppCompatActivity() {
         b.btnTime.text = SimpleDateFormat("HH:mm", Locale("es")).format(cal.time)
     }
 
+    // ---------- Telegram ----------
+
+    private fun setupForward() {
+        b.swForward.isChecked = AppPrefs.forwardEnabled(this)
+        b.etSource.setText(AppPrefs.source(this))
+        b.etInterval.setText(AppPrefs.intervalMin(this).toString())
+        b.swForward.setOnCheckedChangeListener { _, on ->
+            if (on && !TelegramListener.isEnabled(this)) {
+                toast("Primero da acceso a las notificaciones (botón Arreglar).")
+            }
+            AppPrefs.setForwardEnabled(this, on)
+        }
+        b.etSource.doAfterTextChanged { AppPrefs.setSource(this, it?.toString().orEmpty().trim()) }
+        b.etInterval.doAfterTextChanged {
+            val v = it?.toString()?.toIntOrNull() ?: return@doAfterTextChanged
+            AppPrefs.setIntervalMin(this, v.coerceIn(1, 24 * 60))
+        }
+    }
+
+    private fun renderForwardChecks() {
+        b.fwdChecks.removeAllViews()
+        addCheck(
+            b.fwdChecks,
+            TelegramListener.isEnabled(this),
+            "Acceso a notificaciones permitido",
+            "Falta el acceso a las notificaciones (para leer los mensajes de Telegram)"
+        ) {
+            restrictedHelp("acceso a notificaciones") {
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            }
+        }
+        val tgOk = TelegramListener.TELEGRAM_PKGS.any { isInstalled(it) }
+        addCheck(b.fwdChecks, tgOk, "Telegram instalado", "No encuentro Telegram instalado", null)
+    }
+
+    /**
+     * Android 13+ bloquea accesibilidad y acceso a notificaciones en apps instaladas desde un APK
+     * ("A la app se le negó el acceso"). Explica cómo desbloquearlo.
+     */
+    private fun restrictedHelp(what: String, open: () -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle("Activar $what")
+            .setMessage(
+                "Si Android dice \"A la app se le negó el acceso\" o \"Configuración restringida\":\n\n" +
+                    "1. Intenta activarlo una vez y pulsa Cerrar en el aviso.\n" +
+                    "2. Pulsa \"Info de la app\" aquí abajo.\n" +
+                    "3. Arriba a la derecha toca ⋮ → \"Permitir configuración restringida\" y confirma.\n" +
+                    "4. Vuelve aquí y pulsa \"Abrir ajustes\" para activarlo."
+            )
+            .setPositiveButton("Abrir ajustes") { _, _ -> open() }
+            .setNeutralButton("Info de la app") { _, _ ->
+                startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+            }
+            .setNegativeButton("Cerrar", null)
+            .show()
+    }
+
     // ---------- Lista ----------
 
     private fun renderJobs() {
@@ -137,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         jobs.forEach { job ->
             val row = ItemJobBinding.inflate(LayoutInflater.from(this), b.jobs, false)
             row.tvWhen.text = fmt(job.timeMillis)
-            row.tvName.text = job.fileName + if (job.caption.isNotBlank()) " · \"${job.caption}\"" else ""
+            row.tvName.text = job.fileName + if (job.caption.isNotBlank()) " · \"${job.caption.replace('\n', ' ')}\"" else ""
             row.tvState.text = job.state + if (job.detail.isNotBlank()) " — ${job.detail}" else ""
             row.tvState.setTextColor(ContextCompat.getColor(this, when (job.state) {
                 StatusJob.DONE -> R.color.ok_green
@@ -158,6 +219,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refresh() {
         renderChecks()
+        renderForwardChecks()
         renderJobs()
     }
 
@@ -169,7 +231,7 @@ class MainActivity : AppCompatActivity() {
             StatusAccessibilityService.isEnabled(this),
             "Servicio de accesibilidad activado",
             "Accesibilidad DESACTIVADA (obligatorio). En Ajustes busca \"Estado Programado\" y actívalo."
-        ) { openAccessibility() }
+        ) { restrictedHelp("la accesibilidad") { openAccessibility() } }
 
         if (Build.VERSION.SDK_INT >= 33) {
             addCheck(
@@ -212,14 +274,17 @@ class MainActivity : AppCompatActivity() {
         addCheck(waOk, "WhatsApp instalado", "No encuentro WhatsApp instalado", null)
     }
 
-    private fun addCheck(ok: Boolean, okText: String, badText: String, fix: (() -> Unit)?) {
-        val row = ItemCheckBinding.inflate(LayoutInflater.from(this), b.checks, false)
+    private fun addCheck(ok: Boolean, okText: String, badText: String, fix: (() -> Unit)?): Unit =
+        addCheck(b.checks, ok, okText, badText, fix)
+
+    private fun addCheck(container: LinearLayout, ok: Boolean, okText: String, badText: String, fix: (() -> Unit)?) {
+        val row = ItemCheckBinding.inflate(LayoutInflater.from(this), container, false)
         row.tvCheck.text = (if (ok) "✅ " else "⚠️ ") + (if (ok) okText else badText)
         row.btnFix.visibility = if (!ok && fix != null) View.VISIBLE else View.GONE
         row.btnFix.setOnClickListener {
             try { fix?.invoke() } catch (_: Exception) { toast("Ábrelo a mano desde Ajustes.") }
         }
-        b.checks.addView(row.root)
+        container.addView(row.root)
     }
 
     private fun setupAppChoice() {

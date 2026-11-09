@@ -36,13 +36,19 @@ object Scheduler {
     /** Tras reiniciar el teléfono o actualizar la app, las alarmas se pierden: se vuelven a crear. */
     fun rescheduleAll(ctx: Context) {
         val now = System.currentTimeMillis()
+        var catchUp = now + 10_000
         JobStore.all(ctx).forEach { job ->
             when {
                 job.state == StatusJob.RUNNING && job.timeMillis < now - 5 * 60_000 ->
                     JobStore.update(ctx, job.id, StatusJob.FAILED, "Se interrumpió (¿se reinició el teléfono?)")
                 job.state != StatusJob.PENDING -> Unit
                 job.timeMillis >= now -> schedule(ctx, job)
-                now - job.timeMillis <= MISSED_GRACE_MS -> schedule(ctx, job.copy(timeMillis = now + 10_000))
+                now - job.timeMillis <= MISSED_GRACE_MS -> {
+                    val moved = job.copy(timeMillis = catchUp)
+                    catchUp += 2 * 60_000
+                    JobStore.save(ctx, moved)
+                    schedule(ctx, moved)
+                }
                 else -> JobStore.update(ctx, job.id, StatusJob.FAILED, "El teléfono estaba apagado a esa hora")
             }
         }
