@@ -8,3 +8,4 @@ build/
 .cxx
 *.keystore
 !debug.keystore
+!estado/estado-debug.keystore
