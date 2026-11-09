@@ -101,7 +101,7 @@ object AppPrefs {
     // --- Reenvío desde Telegram ---
     fun forwardEnabled(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getBoolean("fwd", false)
     fun setForwardEnabled(ctx: Context, v: Boolean) = ctx.getSharedPreferences(PREFS, 0).edit().putBoolean("fwd", v).apply()
-    fun source(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getString("source", "joanpa noticias")!!
+    fun source(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getString("source", "joanpa noticias, Joanp69Bot")!!
     fun setSource(ctx: Context, v: String) = ctx.getSharedPreferences(PREFS, 0).edit().putString("source", v).apply()
     fun intervalMin(ctx: Context) = ctx.getSharedPreferences(PREFS, 0).getInt("interval", 10)
     fun setIntervalMin(ctx: Context, v: Int) = ctx.getSharedPreferences(PREFS, 0).edit().putInt("interval", v).apply()

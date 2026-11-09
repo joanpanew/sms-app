@@ -39,11 +39,13 @@ Puedes programar varios estados; la lista muestra si cada uno quedó PUBLICADO o
 ## Reenviar noticias de Telegram a tu estado
 
 La sección **"3. Reenviar noticias de Telegram a mi estado"** lee las notificaciones de Telegram
-y, cuando llega un mensaje del canal configurado (por defecto **joanpa noticias**), lo publica
+y, cuando llega un mensaje del canal o bot configurado (por defecto **joanpa noticias, Joanp69Bot**;
+escribe el nombre tal como aparece en la notificación, varios separados por comas), lo publica
 como **estado de texto** en WhatsApp.
 
 - Se publican **en orden** y con una pausa mínima entre una y otra (por defecto **10 minutos**)
-  para no arriesgar un bloqueo de WhatsApp.
+  para no arriesgar un bloqueo de WhatsApp. Puedes **cambiar el tiempo en cualquier momento**
+  (1, 5, 10, 15, 30 min, 1 h, 2 h u otro valor); las noticias que ya estaban en cola se reprograman.
 - Solo se reenvía el **texto** de la notificación (máx. ~700 caracteres). Las fotos y videos de
   Telegram no vienen en la notificación, así que no se reenvían.
 - Necesita el permiso **Acceso a notificaciones** (botón *Arreglar*). Si Android dice

@@ -35,4 +35,26 @@ object TextQueue {
         JobStore.save(ctx, job)
         Scheduler.schedule(ctx, job)
     }
+
+    /**
+     * Al cambiar el intervalo, reprograma las noticias que siguen en cola con la nueva pausa,
+     * contando desde la última que ya se publicó.
+     */
+    @Synchronized
+    fun respace(ctx: Context) {
+        val now = System.currentTimeMillis()
+        val gap = AppPrefs.intervalMin(ctx) * 60_000L
+        val texts = JobStore.all(ctx).filter { it.isText }
+        val lastPublished = texts.filter { it.state == StatusJob.DONE || it.state == StatusJob.RUNNING }
+            .maxOfOrNull { it.timeMillis } ?: 0L
+        var t = maxOf(now + 5_000, lastPublished + gap)
+        val pending = texts.filter { it.state == StatusJob.PENDING }.sortedBy { it.timeMillis }
+        pending.forEach { job ->
+            val moved = job.copy(timeMillis = t)
+            JobStore.save(ctx, moved)
+            Scheduler.schedule(ctx, moved)
+            t += gap
+        }
+        AppPrefs.setLastSlot(ctx, if (pending.isEmpty()) lastPublished else t - gap)
+    }
 }

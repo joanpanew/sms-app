@@ -23,6 +23,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.chip.Chip
 import com.joanpa.estadowa.databinding.ActivityMainBinding
 import com.joanpa.estadowa.databinding.ItemCheckBinding
 import com.joanpa.estadowa.databinding.ItemJobBinding
@@ -137,7 +138,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupForward() {
         b.swForward.isChecked = AppPrefs.forwardEnabled(this)
         b.etSource.setText(AppPrefs.source(this))
-        b.etInterval.setText(AppPrefs.intervalMin(this).toString())
+        buildIntervalChips()
+        showInterval()
         b.swForward.setOnCheckedChangeListener { _, on ->
             if (on && !TelegramListener.isEnabled(this)) {
                 toast("Primero da acceso a las notificaciones (botón Arreglar).")
@@ -145,11 +147,48 @@ class MainActivity : AppCompatActivity() {
             AppPrefs.setForwardEnabled(this, on)
         }
         b.etSource.doAfterTextChanged { AppPrefs.setSource(this, it?.toString().orEmpty().trim()) }
-        b.etInterval.doAfterTextChanged {
-            val v = it?.toString()?.toIntOrNull() ?: return@doAfterTextChanged
-            AppPrefs.setIntervalMin(this, v.coerceIn(1, 24 * 60))
+        b.etInterval.setOnEditorActionListener { v, _, _ ->
+            v.text?.toString()?.toIntOrNull()?.let { setInterval(it) }
+            false
+        }
+        b.etInterval.setOnFocusChangeListener { v, has ->
+            if (!has) (v as android.widget.TextView).text?.toString()?.toIntOrNull()?.let { setInterval(it) }
         }
     }
+
+    private fun buildIntervalChips() {
+        val current = AppPrefs.intervalMin(this)
+        b.cgInterval.removeAllViews()
+        INTERVALS.forEach { min ->
+            val chip = Chip(this).apply {
+                text = if (min < 60) "$min min" else "${min / 60} h"
+                isCheckable = true
+                isChecked = min == current
+                setOnClickListener { setInterval(min) }
+            }
+            b.cgInterval.addView(chip)
+        }
+    }
+
+    /** Cambia el intervalo en cualquier momento; también reordena lo que ya está en cola. */
+    private fun setInterval(min: Int) {
+        val v = min.coerceIn(1, 24 * 60)
+        if (v == AppPrefs.intervalMin(this)) return showInterval()
+        AppPrefs.setIntervalMin(this, v)
+        TextQueue.respace(this)
+        buildIntervalChips()
+        showInterval()
+        renderJobs()
+        toast("Ahora: 1 noticia cada ${fmtMin(v)}. Las que estaban en cola se reprogramaron.")
+    }
+
+    private fun showInterval() {
+        val v = AppPrefs.intervalMin(this)
+        b.tvInterval.text = "Tiempo entre publicaciones: ${fmtMin(v)} (cámbialo cuando quieras)"
+        if (b.etInterval.text?.toString() != v.toString()) b.etInterval.setText(v.toString())
+    }
+
+    private fun fmtMin(v: Int) = if (v < 60 || v % 60 != 0) "$v min" else "${v / 60} h"
 
     private fun renderForwardChecks() {
         b.fwdChecks.removeAllViews()
@@ -316,6 +355,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val PKG_WA = "com.whatsapp"
         const val PKG_BIZ = "com.whatsapp.w4b"
+        private val INTERVALS = listOf(1, 5, 10, 15, 30, 60, 120)
 
         /** Por defecto: próximas 5:00 a. m. */
         private fun defaultTime(): Calendar = Calendar.getInstance().apply {

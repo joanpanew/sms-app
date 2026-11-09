@@ -23,13 +23,14 @@ class TelegramListener : NotificationListenerService() {
         val n = sbn.notification
         if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return
 
-        val source = AppPrefs.source(this).trim()
-        if (source.isEmpty()) return
+        // Varios nombres separados por comas: "joanpa noticias, Joanp69Bot"
+        val sources = AppPrefs.source(this).split(',').map { it.trim().removePrefix("@") }.filter { it.isNotEmpty() }
+        if (sources.isEmpty()) return
         val extras = n.extras
         val title = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
             ?: extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
             ?: return
-        if (!title.contains(source, ignoreCase = true)) return
+        if (sources.none { title.contains(it, ignoreCase = true) }) return
 
         val text = extractText(n)?.trim().orEmpty()
         if (text.isEmpty() || isTelegramSummary(text)) return

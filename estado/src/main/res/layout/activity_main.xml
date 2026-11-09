@@ -175,7 +175,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:hint="Nombre del canal en Telegram">
+                android:hint="Nombre del canal o bot en Telegram (separa varios con comas)">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etSource"
@@ -184,14 +184,36 @@
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:id="@+id/tvInterval"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textStyle="bold" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/cgInterval"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true"
+                    app:singleSelection="true"
+                    xmlns:app="http://schemas.android.com/apk/res-auto" />
+            </HorizontalScrollView>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:hint="Minutos mínimos entre publicaciones">
+                android:hint="Otro valor (minutos)">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etInterval"
+                    android:imeOptions="actionDone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
