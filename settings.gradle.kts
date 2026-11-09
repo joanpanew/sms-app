@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SMS Aviso Controlado"
 include(":app")
+include(":estado")

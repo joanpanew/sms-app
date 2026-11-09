@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Estado Programado</string>
+    <string name="accessibility_label">Estado Programado (publicar en WhatsApp)</string>
+    <string name="accessibility_desc">Solo actúa a la hora que programaste: pulsa \"Mi estado\" y \"Enviar\" en WhatsApp para publicar tu video. No lee tus chats ni envía datos a ningún sitio.</string>
+</resources>

@@ -1,5 +1,8 @@
 # SMS Aviso Controlado
 
+> Este repositorio incluye también **[Estado Programado](estado/README.md)**: app para
+> publicar un video en tu estado de WhatsApp a una hora programada (p. ej. 5:00 a. m.).
+
 App Android para enviar un **SMS de aviso a tus contactos** de forma **controlada**:
 uno por uno, con pausas y variación aleatoria, para reducir el riesgo de que la
 operadora bloquee la línea por spam o de que Android corte los envíos por exceso

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- anillo de "estado" con reloj -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#25D366"
+        android:strokeWidth="5"
+        android:pathData="M54,30a24,24 0 1 1 0,48a24,24 0 1 1 0,-48z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51.5,40h5v15.5l10,6 -2.5,4.3 -12.5,-7.5z" />
+</vector>
